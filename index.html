@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>iFrame Container</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #f0f0f0;
+    }
+    
+    .iframe-container {
+      width: 98%;
+      height: 95%;
+      position: relative;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    @media (max-width: 768px) {
+      .iframe-container {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="iframe-container">
+    <iframe src="360video.html" title="360° Video Player" allowfullscreen></iframe>
+  </div>
+</body>
+</html>

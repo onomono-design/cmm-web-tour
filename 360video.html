@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>360° Video Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 100;
+    }
+    
+    button {
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 0 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .message {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      color: white;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="message" class="message">Loading video...</div>
+
+  <div class="controls">
+    <button id="playPauseBtn">Play</button>
+    <button id="resetBtn">Reset</button>
+    <button id="muteBtn">Unmute</button>
+  </div>
+
+  <a-scene>
+    <a-assets>
+      <video id="video360" style="display: none"
+             crossorigin="anonymous"
+             loop="true" 
+             preload="auto"
+             muted
+             paused>
+        <source src="https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-08-JAPANTOWN-XR1-LOW.mp4" type="video/mp4">
+      </video>
+    </a-assets>
+
+    <!-- Videosphere displaying the 360° video -->
+    <a-videosphere id="videosphere" src="#video360" rotation="0 -90 0"></a-videosphere>
+
+    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+  </a-scene>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const video = document.getElementById('video360');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const muteBtn = document.getElementById('muteBtn');
+      const message = document.getElementById('message');
+
+      // Add error handling
+      video.addEventListener('error', (e) => {
+        console.error('Video Error:', e);
+        message.textContent = "Error loading video";
+        message.style.display = "block";
+      });
+
+      // Modified to just show ready message when metadata loads
+      video.addEventListener('loadedmetadata', () => {
+        console.log('Video metadata loaded');
+        message.textContent = "Click play to start";
+      });
+
+      video.addEventListener('loadeddata', () => {
+        message.textContent = "360° Video Loaded. Use your mouse to look around.";
+        setTimeout(() => message.style.display = "none", 3000);
+      });
+
+      // Set initial button state to match video
+      if (video.muted) {
+        muteBtn.textContent = "Unmute";
+      } else {
+        muteBtn.textContent = "Mute";
+      }
+
+      playPauseBtn.addEventListener('click', function () {
+        if (video.paused) {
+          video.play();
+          playPauseBtn.textContent = "Pause";
+        } else {
+          video.pause();
+          playPauseBtn.textContent = "Play";
+        }
+      });
+
+      resetBtn.addEventListener('click', function () {
+        video.currentTime = 0; // Reset video to the beginning
+      });
+
+      muteBtn.addEventListener('click', function() {
+        if (video.muted) {
+          video.muted = false;
+          muteBtn.textContent = "Mute";
+        } else {
+          video.muted = true;
+          muteBtn.textContent = "Unmute";
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
