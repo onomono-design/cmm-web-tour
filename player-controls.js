@@ -549,6 +549,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Update the mute button to reflect the current state
     updateMuteButton();
     
+    // Reset scrubber state to ensure it's not stuck
+    isScrubbing = false;
+    
+    // Force update the scrubber and time display
+    updateTimeDisplay();
+    
     // Sync play state
     if (wasPlaying) {
       // Only play audio if video was playing before the switch
@@ -557,6 +563,15 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePlayPauseButton();
         // Double-check muting after playback starts
         enforceProperMuting();
+        
+        // Force another update of the scrubber after playback starts
+        setTimeout(() => {
+          updateTimeDisplay();
+          // Ensure the scrubber is properly updated
+          scrubber.value = audio.currentTime;
+          const progressPercentage = (audio.currentTime / (audio.duration || 1)) * 100;
+          updateProgressBar(progressPercentage);
+        }, 100);
       }).catch(error => {
         console.error('Error playing audio:', error);
         message.textContent = "Error playing audio. Try again.";
@@ -751,50 +766,14 @@ document.addEventListener('DOMContentLoaded', function () {
   
   /**
    * Check and request device motion permission on mobile devices
-   * Only called when switching to XR mode if A-Frame hasn't already handled it
+   * This function is now deprecated as we're letting A-Frame handle permissions
    */
   function checkDeviceMotionPermission() {
-    // Skip if A-Frame already handled permissions
-    if (aFramePermissionHandled) {
-      return;
-    }
+    // We're now letting A-Frame handle all device motion permissions
+    console.log('Skipping custom permission request, letting A-Frame handle it');
     
-    // Check if DeviceMotionEvent is available and requires permission
-    if (typeof DeviceMotionEvent !== 'undefined' && 
-        typeof DeviceMotionEvent.requestPermission === 'function') {
-      
-      // Show the permission overlay
-      permissionOverlay.style.display = 'flex';
-      
-      // Add click handler for the enable button
-      enableMotionBtn.addEventListener('click', function() {
-        DeviceMotionEvent.requestPermission()
-          .then(response => {
-            if (response === 'granted') {
-              // Permission granted, hide overlay
-              permissionOverlay.style.display = 'none';
-              aFramePermissionHandled = true; // Mark as handled
-              message.textContent = "Motion controls enabled. Use your phone to look around.";
-              setTimeout(() => message.style.display = "none", 3000);
-            } else {
-              // Permission denied
-              permissionOverlay.style.display = 'none';
-              aFramePermissionHandled = true; // Mark as handled
-              message.textContent = "Motion controls denied. Use touch to look around.";
-              setTimeout(() => message.style.display = "none", 3000);
-            }
-          })
-          .catch(error => {
-            console.error('Error requesting device motion permission:', error);
-            permissionOverlay.style.display = 'none';
-            message.textContent = "Error enabling motion controls.";
-            setTimeout(() => message.style.display = "none", 3000);
-          });
-      });
-    } else {
-      // Device motion doesn't require permission or isn't available
-      console.log('Device motion permission not required or not available');
-    }
+    // Mark as handled to prevent future checks
+    aFramePermissionHandled = true;
   }
 
   // ===== MEDIA EVENT HANDLERS =====
@@ -1003,12 +982,8 @@ document.addEventListener('DOMContentLoaded', function () {
   
   // View in XR button handler
   viewXRBtn.addEventListener('click', function() {
-    // Request device motion permission if needed
-    if (isMobileDevice && !aFramePermissionHandled) {
-      checkDeviceMotionPermission();
-    }
-    
-    // Switch to XR mode
+    // Switch to XR mode directly without requesting permissions
+    // A-Frame will handle its own permission requests
     switchToXRMode();
   });
   
