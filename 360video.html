@@ -5,130 +5,83 @@
   <title>360° Video Player</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aframe/1.4.2/aframe.min.js"></script>
-  <style>
-    body { margin: 0; overflow: hidden; }
-    
-    .controls {
-      position: fixed;
-      bottom: 20px;
-      left: 0;
-      right: 0;
-      text-align: center;
-      z-index: 100;
-    }
-    
-    button {
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      margin: 0 5px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    
-    .message {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      color: white;
-      background: rgba(0,0,0,0.7);
-      padding: 10px 15px;
-      border-radius: 5px;
-      font-size: 14px;
-      z-index: 100;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- External CSS file -->
+  <link rel="stylesheet" href="player-controls.css">
 </head>
 <body>
 
   <div id="message" class="message">Loading video...</div>
-
-  <div class="controls">
-    <button id="playPauseBtn">Play</button>
-    <button id="resetBtn">Reset</button>
-    <button id="muteBtn">Unmute</button>
+  
+  <!-- Mobile device motion permission overlay -->
+  <div id="permissionOverlay" class="permission-overlay">
+    <div class="permission-content">
+      <h2>Enable Motion Controls</h2>
+      <p>For the best 360° experience on mobile, please allow access to device motion and orientation.</p>
+      <button id="enableMotion" class="permission-button">Enable Motion Controls</button>
+    </div>
   </div>
 
-  <a-scene>
+  <div class="player-controls">
+    <!-- Scene and playlist information row -->
+    <div class="info-container">
+      <div class="video-info">
+        <span id="sceneName" class="scene-name">Japantown</span>
+        <span class="separator">|</span>
+        <span id="playlistName" class="playlist-name">San Francisco 360°</span>
+      </div>
+    </div>
+    
+    <div class="scrubber-container">
+      <span id="currentTime" class="time-display">0:00</span>
+      <div class="scrubber-wrapper">
+        <div id="scrubberProgress" class="scrubber-progress"></div>
+        <input type="range" min="0" max="100" value="0" class="scrubber" id="scrubber">
+      </div>
+      <span id="duration" class="time-display">0:00</span>
+    </div>
+    <div class="buttons-container">
+      <div class="camera-reset">
+        <button id="resetCameraBtn" class="control-button"><i class="fas fa-sync-alt"></i></button>
+      </div>
+      <div class="main-controls-wrapper">
+        <div class="main-controls">
+          <button id="rewindBtn" class="control-button"><i class="fas fa-backward"></i></button>
+          <button id="playPauseBtn" class="control-button"><i class="fas fa-play"></i></button>
+          <button id="forwardBtn" class="control-button"><i class="fas fa-forward"></i></button>
+        </div>
+      </div>
+      <div class="volume-control">
+        <button id="muteBtn" class="control-button"><i class="fas fa-volume-mute"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <a-scene loading-screen="dotsColor: white; backgroundColor: black" vr-mode-ui="enabled: false">
     <a-assets>
-      <video id="video360" style="display: none"
+      <video id="video360" 
              crossorigin="anonymous"
              loop="true" 
              preload="auto"
-             muted
+             muted="muted"
+             playsinline
+             webkit-playsinline
+             autoplay="false"
              paused>
         <source src="https://cmm-cloud-storage.s3.us-east-2.amazonaws.com/2025-03-08-JAPANTOWN-XR1-LOW.mp4" type="video/mp4">
       </video>
     </a-assets>
 
     <!-- Videosphere displaying the 360° video -->
-    <a-videosphere id="videosphere" src="#video360" rotation="0 -90 0"></a-videosphere>
+    <a-videosphere id="videosphere" src="#video360" rotation="0 -90 0" preload="auto"></a-videosphere>
 
-    <a-entity camera look-controls position="0 1.6 0"></a-entity>
+    <a-entity id="cameraEntity" camera look-controls="reverseMouseDrag: true" position="0 1.6 0"></a-entity>
   </a-scene>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const video = document.getElementById('video360');
-      const playPauseBtn = document.getElementById('playPauseBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const muteBtn = document.getElementById('muteBtn');
-      const message = document.getElementById('message');
-
-      // Add error handling
-      video.addEventListener('error', (e) => {
-        console.error('Video Error:', e);
-        message.textContent = "Error loading video";
-        message.style.display = "block";
-      });
-
-      // Modified to just show ready message when metadata loads
-      video.addEventListener('loadedmetadata', () => {
-        console.log('Video metadata loaded');
-        message.textContent = "Click play to start";
-      });
-
-      video.addEventListener('loadeddata', () => {
-        message.textContent = "360° Video Loaded. Use your mouse to look around.";
-        setTimeout(() => message.style.display = "none", 3000);
-      });
-
-      // Set initial button state to match video
-      if (video.muted) {
-        muteBtn.textContent = "Unmute";
-      } else {
-        muteBtn.textContent = "Mute";
-      }
-
-      playPauseBtn.addEventListener('click', function () {
-        if (video.paused) {
-          video.play();
-          playPauseBtn.textContent = "Pause";
-        } else {
-          video.pause();
-          playPauseBtn.textContent = "Play";
-        }
-      });
-
-      resetBtn.addEventListener('click', function () {
-        video.currentTime = 0; // Reset video to the beginning
-      });
-
-      muteBtn.addEventListener('click', function() {
-        if (video.muted) {
-          video.muted = false;
-          muteBtn.textContent = "Mute";
-        } else {
-          video.muted = true;
-          muteBtn.textContent = "Unmute";
-        }
-      });
-    });
-  </script>
-
+  <!-- External JavaScript file -->
+  <script src="player-controls.js"></script>
 </body>
 </html>
